@@ -136,6 +136,7 @@ port = '3306'
 user_id = 'root'
 pwd = 'TommyCutlets15!?'
 db_name = 'mets_data'
+pd.set_option('display.max_columns', None)
 try:
     conn = pymysql.connect(host=host_ip, user=user_id, password=pwd, database=db_name)
     # QUERY 1: On average, how many scoring plays were there per game when the Mets played any other MLB team?
@@ -145,12 +146,13 @@ try:
                      'BY avg_scoring_plays;', conn)
     print(df)
     print("----------------------------------------")
-    # QUERY 2: What were the average total runs scored and the average of the left, center, and right field wall distance of each team's stadium for every MLB team? Ordered by the average distance descending.
-    df = pd.read_sql('SELECT st.team_name, ROUND(SUM(st.runs_per_game + st.runs_against_per_game), 1) AS total_runs, '
-                     'ROUND(AVG(s.left_field_distance + s.center_field_distance + s.right_field_distance) / 3, '
-                     '2) AS avg_distance FROM mlb_standings st JOIN team_data td ON td.team_name = st.team_name JOIN '
-                     'mlb_stadiums s ON s.team_abbreviation = td.team_abbreviation GROUP BY st.team_name ORDER BY '
-                     'avg_distance DESC;', conn)
+    # QUERY 2: What were the average total runs scored and the average left, center, and right field wall distance of
+    # each team's stadium for every MLB team? Ordered by the average distance descending.
+    df = pd.read_sql('SELECT st.team_name, s.ballpark, ROUND(SUM(st.runs_per_game + st.runs_against_per_game), '
+                     '1) AS total_runs, ROUND(AVG(s.left_field_distance + s.center_field_distance + '
+                     's.right_field_distance) / 3, 2) AS avg_distance FROM mlb_standings st JOIN team_data td ON '
+                     'td.team_name = st.team_name JOIN mlb_stadiums s ON s.team_abbreviation = td.team_abbreviation '
+                     'GROUP BY st.team_name, s.ballpark ORDER BY avg_distance DESC;', conn)
     print(df)
     print("----------------------------------------")
     # QUERY 3: In which games did MLB.com NOT upload 10 highlights from the game??
@@ -161,5 +163,6 @@ try:
 
 except:
     print("Error: unable to fetch data")
+
 
 conn.close()
